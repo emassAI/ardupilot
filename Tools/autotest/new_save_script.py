@@ -183,3 +183,33 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ---- CONFIG (pick one approach) ----
+PWM_MIN = 1000.0
+PWM_MAX = 2000.0
+
+# A) linear-to-a-fixed max RPM
+RPM_MAX = 38000.0   # change to your motor's approx max (Kv*V as a ballpark)
+
+# B) or derive max from motor Kv and battery volts (no-load estimate)
+# KV = 920.0
+# V_BATT = 16.0      # e.g., 4S ≈ 16 V under load
+# RPM_MAX = KV * V_BATT
+
+def pwm_to_rpm(pwm):
+    # map PWM → [0..1], clamp, then scale to RPM
+    x = (float(pwm) - PWM_MIN) / (PWM_MAX - PWM_MIN)
+    if x < 0.0: x = 0.0
+    if x > 1.0: x = 1.0
+    return x * RPM_MAX
+
+# after you have 'servo' from SERVO_OUTPUT_RAW:
+rpm1 = pwm_to_rpm(getattr(servo, "servo1_raw", 0))
+rpm2 = pwm_to_rpm(getattr(servo, "servo2_raw", 0))
+rpm3 = pwm_to_rpm(getattr(servo, "servo3_raw", 0))
+rpm4 = pwm_to_rpm(getattr(servo, "servo4_raw", 0))
+
+# if you're assembling a CSV row:
+# ...
+row.extend([rpm1, rpm2, rpm3, rpm4])
